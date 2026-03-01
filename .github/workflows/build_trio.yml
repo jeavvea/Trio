@@ -217,7 +217,29 @@ jobs:
       )
     steps:
       - name: Select Xcode version
-        run: "sudo xcode-select --switch /Applications/Xcode_16.2.app/Contents/Developer"
+        run: "sudo xcode-select --switch /Applications/Xcode_16.3.app/Contents/Developer"
+
+      - name: Export DEVELOPER_DIR
+        run: echo "DEVELOPER_DIR=/Applications/Xcode_16.3.app/Contents/Developer" >> "$GITHUB_ENV"
+
+      - name: Verify active Xcode
+        run: |
+          echo "DEVELOPER_DIR=$DEVELOPER_DIR"
+          xcode-select -p
+          xcodebuild -version
+          xcodebuild -showsdks
+
+      - name: Ensure iOS platform is installed
+        run: |
+          if xcrun --sdk iphoneos --show-sdk-path >/dev/null 2>&1; then
+            echo "iPhoneOS SDK is available"
+            xcrun --sdk iphoneos --show-sdk-version
+          else
+            echo "iPhoneOS SDK missing, downloading iOS platform..."
+            sudo xcodebuild -downloadPlatform iOS
+            xcrun --sdk iphoneos --show-sdk-path
+            xcrun --sdk iphoneos --show-sdk-version
+          fi
       
       - name: Checkout Repo for syncing
         if: |
