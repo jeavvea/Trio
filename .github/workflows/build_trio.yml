@@ -229,17 +229,20 @@ jobs:
           xcodebuild -version
           xcodebuild -showsdks
 
-      - name: Ensure iOS platform is installed
+      - name: Install Xcode platform components
         run: |
-          if xcrun --sdk iphoneos --show-sdk-path >/dev/null 2>&1; then
-            echo "iPhoneOS SDK is available"
-            xcrun --sdk iphoneos --show-sdk-version
-          else
-            echo "iPhoneOS SDK missing, downloading iOS platform..."
-            sudo xcodebuild -downloadPlatform iOS
-            xcrun --sdk iphoneos --show-sdk-path
-            xcrun --sdk iphoneos --show-sdk-version
-          fi
+          # Ensure first-launch components are initialized for the selected Xcode.
+          sudo xcodebuild -runFirstLaunch || true
+
+          # Explicitly install platforms used by this workspace (iOS + watchOS).
+          sudo xcodebuild -downloadPlatform iOS
+          sudo xcodebuild -downloadPlatform watchOS
+
+          echo "Verified installed SDKs:"
+          xcrun --sdk iphoneos --show-sdk-path
+          xcrun --sdk iphoneos --show-sdk-version
+          xcrun --sdk watchos --show-sdk-path
+          xcrun --sdk watchos --show-sdk-version
       
       - name: Checkout Repo for syncing
         if: |
